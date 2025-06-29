@@ -1,11 +1,9 @@
 import dotenv from 'dotenv'
-import mongoose from "mongoose";
+dotenv.config({path: '../.env'});
 import connectDB from "./db/index.js";
-import express from 'express';
 
-dotenv.config({path: './.env'});
+import { app } from './app.js';
 
-const app = express();
 connectDB()
 .then(() => {
     app.listen(process.env.PORT || 4000, ()=>{
