@@ -1,7 +1,6 @@
 import dotenv from 'dotenv'
 dotenv.config({path: '../.env'});
 import { v2 as cloudinary } from 'cloudinary';
-import { log } from 'console';
 import fs from 'fs'
 // Configuration
 cloudinary.config({
@@ -11,6 +10,8 @@ cloudinary.config({
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
+    // console.log(process.env.CLOUDINARY_CLOUD_NAME);
+    
     try {
         
         if(!localFilePath) return null;

@@ -119,8 +119,8 @@ const logoutUser = asyncHandler(async (req,res)=>{
     await User.findOneAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1 //removes the field from the documnnet 
             }
         },
         {
@@ -412,6 +412,7 @@ const getWatchHistory = asyncHandler(async (req,res)=>{
     .status(200)
     .json(new ApiResponse(201,user[0].watchHistory,"Watch history fetched successfully"));
 })
+
 export 
 {
     registerUser,
