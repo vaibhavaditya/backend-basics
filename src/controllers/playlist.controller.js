@@ -3,7 +3,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Playlist } from "../models/playlist.model.js"
-import { log } from "console";
 
 const createPlaylist = asyncHandler(async (req, res) => {
     const {name, description} = req.body
@@ -62,9 +61,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
                         }
                     },
                     {
-                        $addFields: {
-                            owner: { $first: "$owner" }
-                        }
+                        $unwind: "$owner"
                     }
                 ]
             }
@@ -88,7 +85,13 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
                             thumbnail: "$$video.thumbnail",
                             views: "$$video.views",
                             duration: "$$video.duration",
-                            isPublished: "$$video.isPublished"
+                            isPublished: "$$video.isPublished",
+                            owner: {
+                                _id: "$$video.owner._id",
+                                username: "$$video.owner.username",
+                                avatar: "$$video.owner.avatar",
+                                fullName: "$$video.owner.fullName"
+                            }
                         }
                     }
                 }
@@ -103,40 +106,25 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
 })
 
 const getPlaylistById = asyncHandler(async (req, res) => {
-    const {playlistId} = req.params
-    //TODO: get playlist by 
-    if(!isValidObjectId(playlistId)){
-        throw new ApiError(401,"invalid playlist id")
-    }
-
-    const playlist = await Playlist.findById(playlistId);
-    if(!playlist){
-        throw new ApiError(502,"Cannot find the playlist")
-    }
-
+    
+    const playlist = req.resource
+    
     return res
     .status(200)
     .json(new ApiResponse(200,playlist,"Fetched playlist successfullly"));
 })
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
-    const {playlistId, videoId} = req.params
-    if(!isValidObjectId(playlistId) || !isValidObjectId(videoId)){
+    const {videoId} = req.params
+    if(!isValidObjectId(videoId)){
         throw new ApiError(401,"invalid playlistId or videoId")
     }
     
-    const playlist = await Playlist.findById(playlistId);
-     if(!playlist){
-        throw new ApiError(502,"Cannot find the playlist to edit")
-    }
+    const playlist = req.resource    
 
-    if(playlist.owner.toString()!==req.user._id.toString()){
-        throw new ApiError(403,"Only owners can edit their playlist");
-    }
-
-    const existedVideo = playlist.videos.includes(videoId)
+    const existedVideo = playlist.videos.some((id)=>id.toString() === videoId.toString())
     if(existedVideo){
-        new ApiError(402,"Video already exist")
+        throw new ApiError(402,"Video already exist")
     }
     
     playlist.videos.push(videoId);
@@ -149,22 +137,14 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 })
 
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
-    const {playlistId, videoId} = req.params
-    if(!isValidObjectId(playlistId) || !isValidObjectId(videoId)){
+    const {videoId} = req.params
+    if(!isValidObjectId(videoId)){
         throw new ApiError(401,"invalid playlistId or videoId")
     }
     
-    const playlist = await Playlist.findById(playlistId);
-     if(!playlist){
-        throw new ApiError(502,"Cannot find the playlist to delete the video")
-    }
-
-    if(playlist.owner.toString()!==req.user._id.toString()){
-        throw new ApiError(403,"Only owners can delete video from their playlist");
-    }
-
-    const existedVideo = playlist.videos.includes(videoId)
-    console.log(existedVideo);
+    const playlist = req.resource
+    
+    const existedVideo = playlist.videos.some((id)=>id.toString() === videoId.toString())
     
     if(!existedVideo){
         throw new ApiError(402,"Video dosent exist")
@@ -179,34 +159,23 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 })
 
 const deletePlaylist = asyncHandler(async (req, res) => {
-    const {playlistId} = req.params
-    // TODO: delete playlist
-    if(!isValidObjectId(playlistId)){
-        throw new ApiError(401,"invalid playlist id")
-    }
+    const playlist = req.resource
 
-    const playlist = await Playlist.findByIdAndDelete(playlistId);
-    
-    if(!playlist){
-        throw new ApiError(502,"Cannot find the playlist to delete")
-    }
-
+    await playlist.deleteOne();
     return res
     .status(200)
     .json(new ApiResponse(200,playlist,"Deleted playlist successfullly"));
 })
 
 const updatePlaylist = asyncHandler(async (req, res) => {
-    const {playlistId} = req.params
     const {name, description} = req.body
-    if(!isValidObjectId(playlistId)){
-        throw new ApiError(401,"Invalid PLaylist Id")
-    }
+    
     if(!name){
         throw new ApiError(402,"Need a name to create a playlist") 
     }
 
-    const playlist = await Playlist.findById(playlistId);
+    const playlist = req.resource;
+
     playlist.name = name || playlist.name
     playlist.description = description || playlist.description
     

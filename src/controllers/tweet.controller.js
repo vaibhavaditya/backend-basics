@@ -28,26 +28,12 @@ const createTweet = asyncHandler(async (req, res) => {
 const updateTweet = asyncHandler(async (req, res) => {
     //TODO: update tweet
     const {newContent} = req.body
-    const {tweetId} = req.params
-
-    if(!isValidObjectId(tweetId)){
-        throw new ApiError(402,"Tweet Id isnt valid")
-    }
 
     if(!newContent){
         throw new ApiError(401,"No content is provided")
     }
 
-    const tweet = await Tweet.findById(tweetId)
-
-    if(!tweet){
-        throw new ApiError(403,"No tweet present to update")
-    }
-
-    if(tweet.owner.toString !== req.user._id){
-        throw new ApiError(405,"Only owner can edit his tweet")
-    }
-
+    const tweet = req.resource
 
     tweet.content = newContent;
     await tweet.save({validateBeforeSave: false})
@@ -59,21 +45,8 @@ const updateTweet = asyncHandler(async (req, res) => {
 })
 
 const deleteTweet = asyncHandler(async (req, res) => {
-    // TODO: delete tweet
-    const { tweetId } = req.params;
-
-    if (!isValidObjectId(tweetId)) {
-        throw new ApiError(402, "Tweet Id isn't valid");
-    }
-
-    const tweet = await Tweet.findById(tweetId);
-    if (!tweet) {
-        throw new ApiError(403, "No tweet present to delete");
-    }
-
-    if(tweet.owner.toString !== req.user._id){
-        throw new ApiError(405,"Only owner can edit his tweet")
-    }
+    // TODO: delete tweet 
+    const tweet = req.resource;
 
     await tweet.deleteOne();
     return res

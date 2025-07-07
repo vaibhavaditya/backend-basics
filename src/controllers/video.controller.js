@@ -34,7 +34,17 @@
                 from: "users",
                 localField: "owner",
                 foreignField: "_id",
-                as: "owner"
+                as: "owner",
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            username: 1,
+                            fullName: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
             }
         },
         {

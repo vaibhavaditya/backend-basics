@@ -96,25 +96,10 @@ const addComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
     // TODO: update a comment
-    const {commentId} = req.params
-    const {newContent} = req.body;
-    if(!commentId){
-        throw new ApiError(401,"Comment id isnt mentioned")
-    }
-    else if(!newContent){
-        throw new ApiError(401,"Cant update a comment without any data")
-    }
-
-    const comment = await Comment.findById(commentId); 
-
-    if(!comment){
-        throw new ApiError(501,"Cant find the comment")
-    }
-
     
-    if(req.user._id.toString() !== comment.owner.toString()){
-        throw new ApiError(401,"Only owner can edit this comment")
-    }
+    const {newContent} = req.body;
+
+    const comment = req.resource
 
     comment.content = newContent;
     await comment.save({validateBeforeSave:true})
@@ -126,24 +111,10 @@ const updateComment = asyncHandler(async (req, res) => {
 
 const deleteComment = asyncHandler(async (req, res) => {
     // TODO: delete a comment
-    const {commentId} = req.params
 
-    if(!commentId){
-        throw new ApiError(401,"Comment id isnt mentioned")
-    }
-    
-    const comment = await Comment.findById(commentId); 
+    const comment = req.resource 
 
-    if(!comment){
-        throw new ApiError(501,"Cant find the comment")
-    }
-
-    
-    if(req.user._id.toString() !== comment.owner.toString()){
-        throw new ApiError(401,"Only owner can edit this comment")
-    }
-
-    await Comment.findByIdAndDelete(commentId);
+    await comment.deleteOne()
     
     return res
     .status(201)
