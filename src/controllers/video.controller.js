@@ -1,11 +1,11 @@
-    import { asyncHandler } from "../utils/asyncHandler.js";
-    import { ApiError } from "../utils/ApiError.js";
-    import { ApiResponse } from "../utils/ApiResponse.js";
-    import { Video } from "../models/video.model.js";
-    import { uploadOnCloudinary } from "../utils/cloudinary.js";
-    import mongoose from "mongoose";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { Video } from "../models/video.model.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import mongoose from "mongoose";
 
-    const getAllVideos = asyncHandler(async (req, res) => {
+const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, sortBy = "createdAt", sortType = "desc", query = "", userId = "" } = req.query;
 
     const matchStage = {};
@@ -81,7 +81,7 @@
 });
 
 
-    const publishAVideo = asyncHandler(async (req,res)=>{
+const publishAVideo = asyncHandler(async (req,res)=>{
         const {title, description} = req.body
         const VideoLocalPath = req.files?.videoFile?.[0]?.path;
         const thumbnailLocalPath = req.files?.thumbnail?.[0]?.path; 
@@ -108,9 +108,9 @@
         return res
         .status(200)
         .json( new ApiResponse(200,video, "Video published successfully"));
-    }) 
+}) 
 
-    const getVideoById = asyncHandler(async (req,res)=>{
+const getVideoById = asyncHandler(async (req,res)=>{
         const { videoId } = req.params
         
         if(!videoId){
@@ -126,37 +126,25 @@
         return res
         .status(201)
         .json(new ApiResponse(201,video,"Video fetched succesfully"));
-    })
+})
 
-    const deleteVideo = asyncHandler(async (req,res)=>{
-        const { videoId } = req.params
+const deleteVideo = asyncHandler(async (req,res)=>{
         
-        if(!videoId){
-            throw new ApiError(402,"Video id isnt provided")
-        }
+    const video = req.resource
+    await video.deleteOne();
+    return res
+    .status(201)
+    .json(new ApiResponse(201,video,"Video deleted succesfully"));
+})
 
-        const video = await Video.findByIdAndDelete(videoId);
-
-        if(!video){
-            throw new ApiError(403,"No video existed to delete")
-        }
-
-        return res
-        .status(201)
-        .json(new ApiResponse(201,video,"Video deleted succesfully"));
-    })
-
-    const updateVideo = asyncHandler(async (req,res)=>{
+const updateVideo = asyncHandler(async (req,res)=>{
         const newThumbnailPath = req.file?.path
-        const { videoId } = req.params
+        
         if(!newThumbnailPath){
             throw new ApiError(402,"New thumbnail is provided")
         }
 
-        if(!videoId){
-            throw new ApiError(402,"videoId isnt provided")
-        }
-
+        
         const newthumbnail = uploadOnCloudinary(newThumbnailPath);
 
         if(newthumbnail.url){
@@ -164,35 +152,19 @@
         }
 
         
-        const video = await Video.findById(videoId)
-        
-        if(!video){
-            throw new ApiError(403,"No video exist")
-        }
+        const video = req.resouce
 
         video.thumbnail = newthumbnail.url;
         await video.save({validateBeforeSave : false})
         
-        if(!video){
-            throw new ApiError(404,"video cannot be formed")
-        }
         return res
         .status(201)
         .json(new ApiResponse(201,video,"Video fetched succesfully"));
-    })
+})
 
-    const togglePublishStatus = asyncHandler(async (req,res)=>{
-        const { videoId } = req.params;
-        if(!videoId){
-            throw new ApiError(402,"Video id isnt provided")
-        }
-
-        const video = await Video.findById(videoId)
-
-        if(!video){
-            throw new ApiError(403,"No video exist")
-        }
-
+const togglePublishStatus = asyncHandler(async (req,res)=>{
+        
+        const video = req.resouce
         video.isPublished = !video.isPublished;
         await video.save({validateBeforeSave : false});
 
@@ -200,7 +172,7 @@
         .status(202)
         .json(new ApiResponse(202,video,"Video toggled succesfully"));
 
-    })
+})
     export {
         getAllVideos,
         publishAVideo,

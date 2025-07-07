@@ -191,10 +191,7 @@ const changeCurrentPassword = asyncHandler(async (req,res)=>{
         throw new ApiError(401,"Both the parameters are required")
     }
 
-    const user = await User.findById(req.user?._id);
-    if(!user){
-        throw new ApiError(402, "Invlaid access token")
-    }
+    const user = req.resouce
     const isPasswordValid = await user.isPasswordCorrect(oldPassword);
     if(!isPasswordValid){
         throw new ApiError(403, "Invalid password given by user")
@@ -220,7 +217,7 @@ const updateAccountDetails = asyncHandler(async (req,res)=>{
         throw new ApiError(401,"Required feilds are not provided");
     }
 
-    const user = await User.findById(req.user._id);
+    const user = req.resouce
 
     const isPasswordValid = await user.isPasswordCorrect(password);
     if(!isPasswordValid){
@@ -250,16 +247,10 @@ const updateAvatarImage = asyncHandler(async (req,res)=>{
         throw new ApiError(400,"Error in uploading it to cloudinary")
     }
 
-    const user = await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $set: {
-                avatarImage: avatar.url
-            }
-        },
-        {new: true}
-    )
-    .select("-password")
+     const user = req.resouce
+    
+    user.avatar = avatar.url
+    await user.save({validateBeforeSave : false})
 
     return res
     .status(200)
@@ -279,16 +270,10 @@ const updateCoverImage = asyncHandler(async (req,res)=>{
         throw new ApiError(400,"Error in uploading it to cloudinary")
     }
 
-    const user = await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $set: {
-                coverImage: coverImage.url
-            }
-        },
-        {new: true}
-    )
-    .select("-password")
+    const user = req.resouce
+    
+    user.coverImage = coverImage.url
+    await user.save({validateBeforeSave : false})    
 
     return res
     .status(200)

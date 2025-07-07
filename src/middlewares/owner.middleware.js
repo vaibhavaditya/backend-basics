@@ -6,7 +6,7 @@ import { ApiError } from "../utils/ApiError.js";
 const getValueFromPath = (obj,path) => {
     return path.split('.').reduce((acc,key)=> acc?.[key],obj);
 }
-export const checkOwner = (Model,idPath) => asyncHandler(async(req,_,next)=>{
+export const checkOwner = (Model,idPath,) => asyncHandler(async(req,_,next)=>{
 
     const resourceId  = getValueFromPath(req,idPath);
     if(!isValidObjectId(resourceId )){
@@ -18,7 +18,7 @@ export const checkOwner = (Model,idPath) => asyncHandler(async(req,_,next)=>{
       throw new ApiError(404, "Resource not found");
     }
 
-    if (resource.owner.toString() !== req.user._id.toString()) {
+    if (resource?.owner?.toString() !== req.user._id.toString()) {
       throw new ApiError(403, "You are not authorized to access this resource");
     }
 
