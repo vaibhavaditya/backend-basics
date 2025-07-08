@@ -29,7 +29,12 @@ const createPlaylist = asyncHandler(async (req, res) => {
 })
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
+    let {page = 1, limit = 10, sortBy = "createdAt"  } = req.query
 
+    const sortStage = {};
+    sortStage[sortBy] = 1;
+
+    const skip = (Number(page)-1) * Number(limit)
     const playlists = await Playlist.aggregate([
         {
             $match: {
@@ -52,6 +57,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
                             pipeline: [
                                 {
                                     $project: {
+                                        _id: 1,
                                         fullName: 1,
                                         username: 1,
                                         avatar: 1
@@ -65,9 +71,6 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
                     }
                 ]
             }
-        },
-        {
-            $sort: {createdAt: -1}
         },
         {
             $project: {
@@ -86,17 +89,15 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
                             views: "$$video.views",
                             duration: "$$video.duration",
                             isPublished: "$$video.isPublished",
-                            owner: {
-                                _id: "$$video.owner._id",
-                                username: "$$video.owner.username",
-                                avatar: "$$video.owner.avatar",
-                                fullName: "$$video.owner.fullName"
-                            }
+                            owner: "$$video.owner"
                         }
                     }
                 }
             }
-        }
+        },
+        { $sort: sortStage },
+        { $skip: skip },
+        { $limit: Number(limit) }
     ])
 
     return res

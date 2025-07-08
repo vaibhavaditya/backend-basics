@@ -8,8 +8,10 @@ import mongoose from "mongoose";
 const getVideoComments = asyncHandler(async (req, res) => {
     //TODO: get all comments for a video
     const {videoId} = req.params
-    const {page = 1, limit = 10} = req.query
-
+    const {page = 1, limit = 10, sortBy="createdAt"} = req.query
+    const sortStage = {};
+    sortStage[sortBy] = -1;
+    const skip = (Number(page)-1) * Number(limit)
     const comments = await Comment.aggregate([
         {
             $match: {
@@ -30,7 +32,17 @@ const getVideoComments = asyncHandler(async (req, res) => {
                 from: "users",
                 localField: "owner",
                 foreignField: "_id",
-                as: "owner"
+                as: "owner",
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            fullName: 1,
+                            username: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
             }
         },
         {
@@ -42,13 +54,12 @@ const getVideoComments = asyncHandler(async (req, res) => {
                 content: 1,
                 createdAt: 1,
                 likecount: {$size: "$likes"},
-                owner: {
-                    _id: "$owner._id",
-                    username: "$owner.username",
-                    avatar: "$owner.avatar"
-                }
+                owner: 1
             }
-        }
+        },
+        {$sort: sortStage},
+        {$skip: skip},
+        {$limit: Number(limit)}
     ])
     // const comments = await Comment.find({ video: videoId });
     if(comments.length === 0){

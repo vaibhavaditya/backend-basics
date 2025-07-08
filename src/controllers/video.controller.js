@@ -9,6 +9,9 @@ const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, sortBy = "createdAt", sortType = "desc", query = "", userId = "" } = req.query;
 
     const matchStage = {};
+    /*$regex: Allows partial and pattern-based string matching (like .includes() in JS).
+    $options: "i": Makes it case-insensitive.*/
+
     if (query) {
         matchStage.$or = [
             { title: { $regex: query, $options: "i" } },
@@ -20,6 +23,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         matchStage.owner = new mongoose.Types.ObjectId(userId);
     }
 
+    
     const sortStage = {};
     sortStage[sortBy] = sortType === "asc" ? 1 : -1;
 

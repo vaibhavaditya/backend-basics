@@ -55,50 +55,64 @@ const deleteTweet = asyncHandler(async (req, res) => {
 });
 
 const getUserTweets = asyncHandler(async (req, res) => {
-    const tweetsByUser = await Tweet.aggregate([
-        {
-            $match: {
-                owner: new mongoose.Types.ObjectId(req.user._id)
-            }
-        },
-        {
-            $lookup: {
-                from: "likes",
-                localField: "_id",
-                foreignField: "tweet",
-                as: "tweetsLiked"
-            }
-        },
-        {
-            $lookup: {
-                from: "users",
-                localField: "owner",
-                foreignField: "_id",
-                as: "owner"
-            }
-        },
-        {
-            $unwind: "$owner"
-        },
-        {
-            $project: {
-                _id: 1,
-                content: 1,
-                createdAt: 1,
-                likeCount: {$size: "$tweetsLiked"},
-                owner: {
-                    _id: "$owner._id",
-                    username: "$owner.username",
-                    avatar: "$owner.avatar"
-                }
-            }
-        }
-    ])
+    const {page = 1, limit = 10, sortBy="createdAt"} = req.query
+    const sortStage = {};
+    sortStage[sortBy] = 1;
+    const skip = (Number(page)-1) * Number(limit)
 
-    return res
-    .status(200)
-    .json(new ApiResponse(200,tweetsByUser,"Tweets posted by user"))
-})
+        const tweetsByUser = await Tweet.aggregate([
+            {
+                $match: {
+                    owner: new mongoose.Types.ObjectId(req.user._id)
+                }
+            },
+            {
+                $lookup: {
+                    from: "likes",
+                    localField: "_id",
+                    foreignField: "tweet",
+                    as: "tweetsLiked"
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "owner",
+                    foreignField: "_id",
+                    as: "owner",
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                fullName: 1,
+                                username: 1,
+                                avatar: 1
+                            }
+                        }
+                    ]                
+                }
+            },
+            {
+                $unwind: "$owner"
+            },
+            {
+                $project: {
+                    _id: 1,
+                    content: 1,
+                    createdAt: 1,
+                    likeCount: {$size: "$tweetsLiked"},
+                    owner: 1
+                }
+            },
+            {$sort: sortStage},
+            {$skip: skip},
+            {$limit: Number(limit)}
+        ])
+
+        return res
+        .status(200)
+        .json(new ApiResponse(200,tweetsByUser,"Tweets posted by user"))
+    })
 
 export{
     createTweet,
