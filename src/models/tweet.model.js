@@ -10,7 +10,13 @@ const tweetsSchema = new Schema({
     owner: {
         type: Schema.Types.ObjectId,
         ref: "User"
-    }
+    },
+
+    imagesUpload:[
+        {
+            type: String
+        }
+    ]
     
 },{timestamps: true})
 

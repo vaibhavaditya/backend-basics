@@ -3,17 +3,25 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {Tweet} from "../models/tweet.model.js"
 import mongoose, { isValidObjectId } from "mongoose"
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet
     const {content} = req.body
+    const photosLocalPath = req?.files.map(file=>file.path);
+    console.log(photosLocalPath);
     if(!content){
         throw new ApiError(401,"No content is provided")
     }
+    
+    const photos = await Promise.all(
+        photosLocalPath.map(path => uploadOnCloudinary(path))
+    )
 
     const tweet = await Tweet.create({
         content,
-        owner: req.user._id
+        owner: req.user._id,
+        imagesUpload: photos.map(file => file.url)
     })
 
     if(!tweet){
