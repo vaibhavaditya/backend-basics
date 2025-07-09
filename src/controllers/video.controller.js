@@ -149,9 +149,9 @@ const updateVideo = asyncHandler(async (req,res)=>{
         }
 
         
-        const newthumbnail = uploadOnCloudinary(newThumbnailPath);
+        const newthumbnail = await uploadOnCloudinary(newThumbnailPath);
 
-        if(newthumbnail.url){
+        if(!newthumbnail.url){
             throw new ApiError(403,"Cannot be uploaded to clodinary")
         }
 

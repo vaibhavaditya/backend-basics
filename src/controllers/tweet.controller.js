@@ -9,7 +9,6 @@ const createTweet = asyncHandler(async (req, res) => {
     //TODO: create tweet
     const {content} = req.body
     const photosLocalPath = req?.files.map(file=>file.path);
-    console.log(photosLocalPath);
     if(!content){
         throw new ApiError(401,"No content is provided")
     }
@@ -36,14 +35,20 @@ const createTweet = asyncHandler(async (req, res) => {
 const updateTweet = asyncHandler(async (req, res) => {
     //TODO: update tweet
     const {newContent} = req.body
+    const photosLocalPath = req?.files.map(file=>file.path);
 
     if(!newContent){
         throw new ApiError(401,"No content is provided")
     }
+    
+    const photos = await Promise.all(
+        photosLocalPath.map(path => uploadOnCloudinary(path))
+    )
 
     const tweet = req.resource
 
     tweet.content = newContent;
+    tweet.imagesUpload = photos.map(file => file.url)
     await tweet.save({validateBeforeSave: false})
 
     return res
@@ -120,7 +125,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
         return res
         .status(200)
         .json(new ApiResponse(200,tweetsByUser,"Tweets posted by user"))
-    })
+})
 
 export{
     createTweet,
