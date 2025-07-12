@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-import { errorMiddleware } from './middlewares/error.middleware.js';
+// import { errorMiddleware } from './middlewares/error.middleware.js';
 
 
 const app = express()
@@ -16,6 +16,10 @@ app.use(express.urlencoded({extended: true, limit: "16kb"}));
 app.use(express.static('public'));
 app.use(cookieParser());
 
+app.get('/',(req,res)=>{
+    res.send("Home");
+    
+})
 //routes import
 import userRouter from './routes/user.routes.js'
 import videoRouter from './routes/video.routes.js'
@@ -32,5 +36,5 @@ app.use("/api/v1/likes", likeRouter)
 app.use("/api/v1/tweets", tweetRouter);
 app.use("/api/v1/playlist",playlistRouter)
 app.use("/api/v1/subscription",subscriptionRouter)
-app.use(errorMiddleware);
+// app.use(errorMiddleware);
 export {app}

@@ -89,6 +89,7 @@ const publishAVideo = asyncHandler(async (req,res)=>{
         const {title, description} = req.body
         const VideoLocalPath = req.files?.videoFile?.[0]?.path;
         const thumbnailLocalPath = req.files?.thumbnail?.[0]?.path; 
+        console.log(VideoLocalPath);
         if(!title || !description || !VideoLocalPath || !thumbnailLocalPath){
             throw new ApiError(402, "All Values are required for posting a video")
         }
