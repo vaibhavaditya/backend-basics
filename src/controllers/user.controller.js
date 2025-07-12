@@ -1,10 +1,15 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js";
 import {ApiResponse} from "../utils/ApiResponse.js"
-import {User} from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from 'jsonwebtoken';
 import mongoose from "mongoose";
+import {User} from "../models/user.model.js"
+import { Subscription } from "../models/subscription.model.js";
+import { Video } from "../models/video.model.js";
+import { Tweet } from "../models/tweet.model.js";
+import { Playlist } from "../models/playlist.model.js";
+import { Like } from "../models/like.model.js";
 
 
 const generateAccessAndRefershTokens = async (userId) => {
@@ -398,6 +403,29 @@ const getWatchHistory = asyncHandler(async (req,res)=>{
     .json(new ApiResponse(201,user[0].watchHistory,"Watch history fetched successfully"));
 })
 
+const deleteUser = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+
+    await Subscription.deleteMany({
+        $or: [
+            { channel: userId },
+            { subscriber: userId }
+        ]
+    });
+
+    await Video.deleteMany({ owner: userId });
+
+    await Tweet.deleteMany({ owner: userId });
+
+    await Playlist.deleteMany({ owner: userId });
+
+    await Like.deleteMany({ likedBy: userId });
+
+    await Comment.deleteMany({ owner: userId})
+    await req.user.deleteOne();
+
+    res.status(200).json(new ApiResponse(200, {}, "User and all related data deleted"));
+});
 export 
 {
     registerUser,
@@ -410,5 +438,6 @@ export
     updateAvatarImage,
     updateCoverImage,
     getUserChannelProfile,
-    getWatchHistory
+    getWatchHistory,
+    deleteUser
 }
