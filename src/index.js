@@ -1,19 +1,32 @@
 import dotenv from 'dotenv'
-dotenv.config({path: './.env'});
-import connectDB from "./db/index.js";
+dotenv.config();
+import {connectDB} from "./db/index.js";
+import { connectRedisDB } from './db/redis.js';
 
 import { app } from './app.js';
 
-connectDB()
-.then(() => {
-    app.listen(process.env.PORT || 4000, ()=>{
-        console.log(`Server is running at port: ${process.env.PORT}`);   
-    })
-})
-.catch((error)=>{
-    console.log("MONGODB connection failed!!! ", error);
+const port  = process.env.PORT;
+
+const startApp = async () => {
+    try {
+        await connectDB();
+        console.log("Mongoose DB connected");
+        
+        await connectRedisDB();
+        console.log("Redis DB connected");
+
+        app.listen(port,()=>{
+            console.log(`Server running at http://localhost:${port}`);
+        })
+
+    } catch (error) {
+        console.log("App Server failed", error.message);
+        process.exit(1);
+    }
     
-})
+}
+
+startApp();
 
 
 
@@ -22,23 +35,3 @@ connectDB()
 
 
 
-// import mongoose from "mongoose";
-// import { DB_NAME } from "./constant";
-// import express from 'express';
-
-// const app = express()
-
-// (async()=>{
-
-//     try {
-//         mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`)
-//         app.on('error',(error)=>{
-//             console.log("Err: ", error);
-//         })
-
-//     } catch (error) {
-//         console.log("Error: ", error);
-//         throw error 
-//     }
-
-// })()
