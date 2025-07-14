@@ -53,6 +53,8 @@ const userSchema = new Schema({
 
 },{timestamps: true})
 
+userSchema.index({fullName: 1, username: 1})
+
 userSchema.pre('save', async function(next){
     if(!this.isModified('password')) return next();
 

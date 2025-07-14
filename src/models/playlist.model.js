@@ -18,9 +18,14 @@ const playlistSchema = new Schema({
 
     owner: {
         type: Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        index: true
     }
     
 },{timestamps: true})
+
+playlistSchema.index({ owner: 1 });
+playlistSchema.index({ name: "text", description: "text" });
+playlistSchema.plugin(mongooseAggregatePaginate);
 
 export const Playlist = mongoose.model('Playlist',playlistSchema)

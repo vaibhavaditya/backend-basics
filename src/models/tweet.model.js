@@ -9,7 +9,8 @@ const tweetsSchema = new Schema({
 
     owner: {
         type: Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        index: true
     },
 
     imagesUpload:[
@@ -20,4 +21,5 @@ const tweetsSchema = new Schema({
     
 },{timestamps: true})
 
+tweetsSchema.index({owner: 1})
 export const Tweet = mongoose.model('Tweet',tweetsSchema)

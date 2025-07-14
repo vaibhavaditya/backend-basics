@@ -9,13 +9,17 @@ const commentSchema = new Schema({
 
     video: {
         type: Schema.Types.ObjectId,
-        ref: "Video"
+        ref: "Video",
+        index: true
     },
 
     owner: {
         type: Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        index: true
     }
 },{timestamps: true})
+
+commentSchema.index({video: 1,owner: 1})
 
 export const Comment = mongoose.model('Comment',commentSchema)
