@@ -6,6 +6,7 @@ import { ApiError } from "../utils/ApiError.js";
 const getValueFromPath = (obj,path) => {
     return path.split('.').reduce((acc,key)=> acc?.[key],obj);
 }
+
 export const checkOwner = (Model,idPath,ownerField = "owner") => 
   asyncHandler(async(req,_,next)=>{
     
